@@ -26,6 +26,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.ibm.mqlight.api.callback.CallbackService;
 import com.ibm.mqlight.api.endpoint.EndpointService;
+import com.ibm.mqlight.api.impl.BluemixNonBlockingClientBuilderImpl;
+import com.ibm.mqlight.api.impl.NonBlockingClientBuilderImpl;
 import com.ibm.mqlight.api.impl.NonBlockingClientImpl;
 import com.ibm.mqlight.api.network.NetworkService;
 import com.ibm.mqlight.api.timer.TimerService;
@@ -37,27 +39,27 @@ import com.ibm.mqlight.api.timer.TimerService;
  * <p>
  * Example code for using the non-blocking client to send a message
  * <pre>
- * NonBlockingClient.create("amqp://localhost", new NonBlockingClientAdapter<Void>() {
+ * NonBlockingClient.builder().service("amqp://localhost").build(new NonBlockingClientAdapter<Void>() {
  *     public void onStarted(NonBlockingClient client, Void context) {
  *         SendOptions opts = SendOptions.builder().setQos(QOS.AT_LEAST_ONCE).build();
  *         client.send("/kittens", "Hello kitty!", null, opts, new CompletionListener<Void>() {
  *             public void onSuccess(NonBlockingClient client, Void context) {
  *                 client.stop(null, null);
  *             }
+ *
  *             public void onError(NonBlockingClient client, Void context, Exception exception) {
  *                 client.stop(null, null);
  *             }
  *         }, null);
  *     }
- *     public void onDrain(NonBlockingClient client, Void context) {}
- * }, null);
+ * });
  * </pre>
  * <p>
  *
  * Example code for receiving messages published to the '/kittens' topic.
  * <pre>
  * public static void main(String[] args) {
- *     NonBlockingClient client = NonBlockingClient.create("amqp://localhost", null, null);
+ *     NonBlockingClient client = NonBlockingClient.builder().service("amqp://localhost").build(null);
  *     client.subscribe("/kittens", new DestinationAdapter<Void>() {
  *         public void onMessage(NonBlockingClient client, Void context, Delivery delivery) {
  *             switch (delivery.getType()) {
@@ -76,11 +78,29 @@ import com.ibm.mqlight.api.timer.TimerService;
  * </pre>
  */
 public abstract class NonBlockingClient {
+    @SuppressWarnings("deprecation")
     protected static final ClientOptions defaultClientOptions = ClientOptions.builder().build();
     protected static final SendOptions defaultSendOptions = SendOptions.builder().build();
     protected static final SubscribeOptions defaultSubscribeOptions = SubscribeOptions.builder().build();
 
     /**
+     * @return a builder for creating instances of {@link NonBlockingClient}.
+     */
+    public static NonBlockingClientBuilder builder() {
+        return new NonBlockingClientBuilderImpl();
+    }
+
+    /**
+     * @return a builder for creating instances of {@link NonBlockingClient}
+     *         for use in the IBM Bluemix environment.
+     */
+    public static BluemixNonBlockingClientBuilder bluemixBuilder() {
+        return new BluemixNonBlockingClientBuilderImpl();
+    }
+
+    /**
+     * Use {@link #builder()} or {@link #bluemixBuilder()} instead.
+     * <p>
      * Creates a new instance of the <code>NonBlockingClient</code> in starting state.
      * @param service a URI for the service to connect to, for example: <code>amqp://example.org:5672</code>.
      *        This URI can start with either <code>amqp://</code> or <code>amqps://</code> (for SSL/TLS based
@@ -95,6 +115,7 @@ public abstract class NonBlockingClient {
      * @return a new instance of <code>NonBlockingClient</code>
      * @throws IllegalArgumentException thrown if one or more of the <code>options</code> is not valid.
      */
+    @Deprecated
     public static <T> NonBlockingClient create(String service, ClientOptions options,
             NonBlockingClientListener<T> listener, T context)
     throws IllegalArgumentException {
@@ -102,6 +123,9 @@ public abstract class NonBlockingClient {
     }
 
     /**
+     * Use {@link #create(EndpointService, CallbackService, NetworkService, TimerService, GsonBuilder, String, NonBlockingClientListener, Object)}
+     * instead.
+     * <p>
      * Creates a new instance of the <code>NonBlockingClient</code> in starting state.  The client
      * will use the set of plugable services, provided as arguments to this method.
      * @param endpointService used to lookup the location of the MQ Light server.
@@ -115,6 +139,7 @@ public abstract class NonBlockingClient {
      * @return a new instance of <code>NonBlockingClient</code>
      * @throws IllegalArgumentException thrown if one or more of the <code>options</code> is not valid.
      */
+    @Deprecated
     public static <T> NonBlockingClient create(EndpointService endpointService,
                                                CallbackService callbackService,
                                                NetworkService networkService,
@@ -124,14 +149,57 @@ public abstract class NonBlockingClient {
                                                NonBlockingClientListener<T>listener,
                                                T context)
     throws IllegalArgumentException {
-        return new NonBlockingClientImpl(endpointService, callbackService, networkService, timerService, gsonBuilder, options, listener, context);
+        String id = options == null ? null : options.getId();
+        return new NonBlockingClientImpl(endpointService, callbackService, networkService, timerService, gsonBuilder, id, listener, context);
     }
 
     /**
-     * Creates a new instance of the <code>NonBlockingClient</code> in starting state.  This is equivalent to calling:
+     * Creates a new instance of the {@link NonBlockingClient} in starting
+     * state.  The client will use the set of plugable services, provided as
+     * arguments to this method.
+     * @param endpointService
+     *            used to lookup the location of the MQ Light server.
+     * @param callbackService
+     *            used to run each call back into application code.
+     * @param networkService
+     *            used to establish network connections to the MQ Light server.
+     * @param timerService
+     *            used to schedule work to be performed in the future.
+     * @param id
+     *            the ID to associate with the client.
+     * @param listener
+     *            a listener that is notified of major life-cycle events for the
+     *            client.
+     * @param context
+     *            a context object that is passed into the listener.  This can
+     *            be used within the listener code to identify the specific
+     *            instance of the create method relating to the listener
+     *            invocation.
+     * @return a new instance of <code>NonBlockingClient</code>
+     * @throws IllegalArgumentException thrown if one or more of the
+     *         <code>options</code> is not valid.
+     */
+    public static <T> NonBlockingClient create(EndpointService endpointService,
+                                               CallbackService callbackService,
+                                               NetworkService networkService,
+                                               TimerService timerService,
+                                               GsonBuilder gsonBuilder,
+                                               String id,
+                                               NonBlockingClientListener<T>listener,
+                                               T context)
+    throws IllegalArgumentException {
+        return new NonBlockingClientImpl(endpointService, callbackService, networkService, timerService, gsonBuilder, id, listener, context);
+    }
+
+    /**
+     * Use {@link #builder()} or {@link #bluemixBuilder()} instead.
+     * <p>
+     * Creates a new instance of the {@link NonBlockingClient} in starting
+     * state.  This is equivalent to calling:
      * <code>create(service, ClientOptions.create, listener, context);</code>
      * @see NonBlockingClient#create(String, ClientOptions, NonBlockingClientListener, Object)
      */
+    @Deprecated
     public static <T> NonBlockingClient create(String service, NonBlockingClientListener<T> listener, T context) {
         return create(service, defaultClientOptions, listener, context);
     }

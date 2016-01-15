@@ -27,6 +27,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -47,8 +48,6 @@ import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 import com.ibm.mqlight.api.ClientException;
-import com.ibm.mqlight.api.ClientOptions;
-import com.ibm.mqlight.api.ClientOptions.SSLOptions;
 import com.ibm.mqlight.api.ClientState;
 import com.ibm.mqlight.api.CompletionListener;
 import com.ibm.mqlight.api.Delivery;
@@ -173,7 +172,7 @@ public class TestNonBlockingClientImpl {
         StubCallbackService callbackService = new StubCallbackService();
         MockComponent component = new MockComponent();
         StubTimerService timerService = new StubTimerService();
-        NonBlockingClientImpl client = new NonBlockingClientImpl(endpointService, callbackService, component, timerService, new GsonBuilder(), ClientOptions.builder().build(), null, null);
+        NonBlockingClientImpl client = new NonBlockingClientImpl(endpointService, callbackService, component, timerService, new GsonBuilder(), null, null, null);
         assertTrue("Expected auto generated client ID to start with string 'AUTO_'", client.getId().startsWith("AUTO_"));
     }
 
@@ -186,7 +185,7 @@ public class TestNonBlockingClientImpl {
         StubCallbackService callbackService = new StubCallbackService();
         MockComponent component = new MockComponent();
         StubTimerService timerService = new StubTimerService();
-        NonBlockingClientImpl client = new NonBlockingClientImpl(endpointService, callbackService, component, timerService, new GsonBuilder(), ClientOptions.builder().build(), null, null);
+        NonBlockingClientImpl client = new NonBlockingClientImpl(endpointService, callbackService, component, timerService, new GsonBuilder(), null, null, null);
         assertEquals("Client should have transitioned into stopping state, ", ClientState.STOPPING, client.getState());
     }
 
@@ -294,10 +293,10 @@ public class TestNonBlockingClientImpl {
             protected <T> MockClient(EndpointService endpointService,
                     CallbackService callbackService, ComponentImpl engine,
                     TimerService timerService, GsonBuilder builder,
-                    ClientOptions options,
+                    String clientId,
                     NonBlockingClientListener<T> listener, T context) {
                 super(endpointService, callbackService, engine, timerService,
-                        builder, options, listener, context);
+                        builder, clientId, listener, context);
             }
 
             @Override
@@ -444,9 +443,9 @@ public class TestNonBlockingClientImpl {
             private final LinkedList<Message> messages = new LinkedList<>();
             protected <T> MockClient(EndpointService endpointService,
                     CallbackService callbackService, ComponentImpl engine,
-                    TimerService timerService, GsonBuilder builder, ClientOptions options,
+                    TimerService timerService, GsonBuilder builder, String clientId,
                     NonBlockingClientListener<T> listener, T context) {
-                super(endpointService, callbackService, engine, timerService, builder, options,
+                super(endpointService, callbackService, engine, timerService, builder, clientId,
                         listener, context);
             }
             @Override
@@ -1025,10 +1024,10 @@ public class TestNonBlockingClientImpl {
             protected <T> MockClient(EndpointService endpointService,
                     CallbackService callbackService, ComponentImpl engine,
                     TimerService timerService, GsonBuilder gsonBuilder,
-                    ClientOptions options,
+                    String clientId,
                     NonBlockingClientListener<T> listener, T context) {
                 super(endpointService, callbackService, engine, timerService, gsonBuilder,
-                        options, listener, context);
+                        clientId, listener, context);
             }
 
             @Override

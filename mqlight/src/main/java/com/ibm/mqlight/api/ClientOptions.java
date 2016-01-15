@@ -24,6 +24,9 @@ import com.ibm.mqlight.api.logging.Logger;
 import com.ibm.mqlight.api.logging.LoggerFactory;
 
 /**
+ * Deprecated, use {@link NonBlockingClient#builder()} or
+ * {@link NonBlockingClient#bluemixBuilder()} instead.
+ * <p>
  * A set of options that can be used to configure the behaviour of the <code>NonBlockingClient</code>
  * class when it is created using the {code {@link NonBlockingClient#create(String, ClientOptions, NonBlockingClientListener, Object)})
  * method.  For example:
@@ -32,6 +35,7 @@ import com.ibm.mqlight.api.logging.LoggerFactory;
  * NonBlockingClient client = NonBlockingClient.create("amqp://localhost", opts, listener, null);
  * </pre>
  */
+@Deprecated
 public class ClientOptions {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientOptions.class);

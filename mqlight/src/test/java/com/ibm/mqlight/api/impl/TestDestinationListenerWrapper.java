@@ -44,7 +44,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.ibm.mqlight.api.BytesDelivery;
-import com.ibm.mqlight.api.ClientOptions;
 import com.ibm.mqlight.api.Delivery;
 import com.ibm.mqlight.api.DestinationListener;
 import com.ibm.mqlight.api.JsonDelivery;
@@ -77,7 +76,7 @@ public class TestDestinationListenerWrapper {
                   }, new TimerService() {
                       @Override public void schedule(long delay, Promise<Void> promise) {}
                       @Override public void cancel(Promise<Void> promise) {}
-                  }, null, ClientOptions.builder().build(), null, null);
+                  }, null, null, null, null);
         }
     }
 

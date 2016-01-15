@@ -18,6 +18,8 @@
  */
 package com.ibm.mqlight.api.impl;
 
+import io.netty.buffer.ByteBuf;
+
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.BufferOverflowException;
@@ -93,8 +95,8 @@ import com.ibm.mqlight.api.logging.Logger;
 import com.ibm.mqlight.api.logging.LoggerFactory;
 import com.ibm.mqlight.api.network.NetworkService;
 import com.ibm.mqlight.api.timer.TimerService;
-import io.netty.buffer.ByteBuf;
 
+@SuppressWarnings("deprecation")
 public class NonBlockingClientImpl extends NonBlockingClient implements FSMActions, Component, CallbackService {
 
     static {
@@ -191,11 +193,11 @@ public class NonBlockingClientImpl extends NonBlockingClient implements FSMActio
             ComponentImpl engine,
             TimerService timerService,
             GsonBuilder gsonBuilder,
-            ClientOptions options,
+            String clientId,
             NonBlockingClientListener<T>listener,
             T context) {
         final String methodName = "<init>";
-        logger.entry(this, methodName, callbackService, engine, timerService, gsonBuilder, options, listener, context);
+        logger.entry(this, methodName, callbackService, engine, timerService, gsonBuilder, clientId, listener, context);
 
         if (endpointService == null) {
           final IllegalArgumentException exception = new IllegalArgumentException("EndpointService cannot be null");
@@ -224,9 +226,8 @@ public class NonBlockingClientImpl extends NonBlockingClient implements FSMActio
         this.timer = timerService;
         this.gsonBuilder = gsonBuilder == null ? new GsonBuilder() : gsonBuilder;
         this.gson = this.gsonBuilder.create();
-        if (options == null) options = defaultClientOptions;
-        clientId = options.getId() != null ? options.getId() : generateClientId();
-        logger.setClientId(clientId);
+        this.clientId = clientId == null ? generateClientId() : clientId;
+        logger.setClientId(this.clientId);
         clientListener = new NonBlockingClientListenerWrapper<>(this, listener, context);
         stateMachine = NonBlockingFSMFactory.newStateMachine(this);
         endpointService.lookup(new EndpointPromiseImpl(this));
@@ -238,20 +239,20 @@ public class NonBlockingClientImpl extends NonBlockingClient implements FSMActio
                                      NetworkService networkService,
                                      TimerService timerService,
                                      GsonBuilder gsonBuilder,
-                                     ClientOptions options,
+                                     String clientId,
                                      NonBlockingClientListener<T>listener,
                                      T context) {
-        this(endpointService, callbackService, new Engine(networkService, timerService), timerService, gsonBuilder, options, listener, context);
+        this(endpointService, callbackService, new Engine(networkService, timerService), timerService, gsonBuilder, clientId, listener, context);
     }
 
     public <T> NonBlockingClientImpl(String service, ClientOptions options, NonBlockingClientListener<T> listener, T context) {
-        this(service == null ? new BluemixEndpointService()
+        this(service == null ? new BluemixEndpointService(null, null)
                 : new SingleEndpointService(service,
                         options == null ? null : options.getUser(),
                         options == null ? null : options.getPassword(),
                         options == null ? null : options.getSSLOptions()),
                 new ThreadPoolCallbackService(5), new NettyNetworkService(),
-                new TimerServiceImpl(), null, options, listener, context);
+                new TimerServiceImpl(), null, options == null ? null : options.getId(), listener, context);
     }
 
     @Override
