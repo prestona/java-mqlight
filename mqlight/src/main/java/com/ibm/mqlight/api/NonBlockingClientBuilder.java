@@ -56,6 +56,16 @@ public interface NonBlockingClientBuilder {
      */
     public NonBlockingClientBuilder verifyHostName(boolean verifyName);
 
+    public NonBlockingClientBuilder keyStore(File keyStoreFile);
+
+    public NonBlockingClientBuilder keyStorePassphrase(String passphrase);
+
+    public NonBlockingClientBuilder clientCertificate(File clientCertificateFile);
+
+    public NonBlockingClientBuilder clientKey(File clientKeyFile);
+
+    public NonBlockingClientBuilder clientKeyPassphrase(String passphrase);
+
     /**
      * A URI for the service to connect to. For example:
      * <code>amqp://example.org:5672</code>. This URI can start with either

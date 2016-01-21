@@ -27,7 +27,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -48,6 +47,7 @@ import org.junit.Test;
 
 import com.google.gson.GsonBuilder;
 import com.ibm.mqlight.api.ClientException;
+import com.ibm.mqlight.api.ClientOptions.SSLOptions;
 import com.ibm.mqlight.api.ClientState;
 import com.ibm.mqlight.api.CompletionListener;
 import com.ibm.mqlight.api.Delivery;
